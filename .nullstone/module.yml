@@ -1,0 +1,16 @@
+org_name: nullstone
+name: gcp-cloudrun-service
+friendly_name: Cloud Run Service
+description: Creates a long-running service with scale-to-zero using Google Cloud Run
+category: app
+subcategory: container
+provider_types:
+    - gcp
+platform: cloudrun
+subplatform: ""
+type: ""
+appCategories: []
+is_public: true
+tool_name: opentofu
+include: []
+source_url: https://github.com/nullstone-modules/gcp-cloudrun-service
