@@ -18,6 +18,17 @@ Default is 512Mi.
 EOF
 }
 
+variable "cpu_idle" {
+  type        = bool
+  default     = true
+  description = <<EOF
+Controls whether CPU is allocated only during request processing or kept always-on.
+  - true (default): CPU is throttled between requests. Cheaper, but background work (timers, queue consumers, websocket pings) will not run reliably between requests.
+  - false: CPU is always allocated for the lifetime of an instance. Required for long-running background work, websocket keepalives, or any service that must do work outside of a request.
+Default is true.
+EOF
+}
+
 variable "command" {
   type        = list(string)
   default     = []
@@ -77,48 +88,4 @@ variable "max_instances" {
 Maximum number of container instances the service can scale up to.
 Default is 100.
 EOF
-}
-
-variable "ingress" {
-  type        = string
-  default     = "INGRESS_TRAFFIC_INTERNAL_ONLY"
-  description = <<EOF
-Controls which traffic sources can reach this service.
-  - INGRESS_TRAFFIC_ALL: public internet (subject to IAM invoker policy)
-  - INGRESS_TRAFFIC_INTERNAL_ONLY: same-VPC traffic, in-project GCP services, PubSub/Eventarc
-  - INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER: internal sources plus Google Cloud external HTTPS load balancer
-Default is INGRESS_TRAFFIC_INTERNAL_ONLY. To expose publicly, use a capability that provisions a GCLB or set ingress to INGRESS_TRAFFIC_ALL.
-EOF
-
-  validation {
-    condition     = contains(["INGRESS_TRAFFIC_ALL", "INGRESS_TRAFFIC_INTERNAL_ONLY", "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"], var.ingress)
-    error_message = "ingress must be one of INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL_ONLY, or INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER."
-  }
-}
-
-variable "allow_unauthenticated" {
-  type        = bool
-  default     = false
-  description = <<EOF
-When true, grants `roles/run.invoker` to `allUsers`, letting unauthenticated callers invoke the service.
-Combined with `ingress = INGRESS_TRAFFIC_ALL`, this makes the service publicly reachable without auth.
-Has no effect when ingress restricts traffic to internal sources.
-Default is false.
-EOF
-}
-
-variable "vpc_egress" {
-  type        = string
-  default     = "PRIVATE_RANGES_ONLY"
-  description = <<EOF
-Controls which outbound traffic is routed through the VPC connector.
-  - PRIVATE_RANGES_ONLY: only traffic to RFC1918 ranges uses the connector; public-internet egress bypasses the VPC
-  - ALL_TRAFFIC: all outbound traffic uses the connector (required for VPC-level egress controls, Private Google Access, etc.)
-Default is PRIVATE_RANGES_ONLY.
-EOF
-
-  validation {
-    condition     = contains(["PRIVATE_RANGES_ONLY", "ALL_TRAFFIC"], var.vpc_egress)
-    error_message = "vpc_egress must be either PRIVATE_RANGES_ONLY or ALL_TRAFFIC."
-  }
 }

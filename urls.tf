@@ -1,14 +1,11 @@
 locals {
   // Private and public URLs are shown in the Nullstone UI
   // Typically, they are created through capabilities attached to the application
-  // If this module has URLs, add them here as list(string)
-  //
-  // The service's auto-assigned `*.run.app` URL is classified by ingress:
-  //   - INGRESS_TRAFFIC_ALL -> public (reachable from the internet, subject to IAM)
-  //   - INGRESS_TRAFFIC_INTERNAL_ONLY / INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER -> private (reachable only from same-VPC/LB)
-  service_uri_is_public   = var.ingress == "INGRESS_TRAFFIC_ALL"
-  additional_private_urls = local.service_uri_is_public ? [] : [google_cloud_run_v2_service.this.uri]
-  additional_public_urls  = local.service_uri_is_public ? [google_cloud_run_v2_service.this.uri] : []
+  // The service's auto-assigned `*.run.app` URL is always classified as private because
+  // ingress is fixed at INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER. Public reachability is
+  // delivered by capabilities that front the service with an external load balancer.
+  additional_private_urls = [google_cloud_run_v2_service.this.uri]
+  additional_public_urls  = []
 
   private_urls = concat([for cur in local.capabilities.private_urls : cur.url], local.additional_private_urls)
   public_urls  = concat([for cur in local.capabilities.public_urls : cur.url], local.additional_public_urls)

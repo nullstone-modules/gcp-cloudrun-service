@@ -7,5 +7,7 @@ locals {
     "private_urls",
     "public_urls",
     "metrics",
+    "startup_probes",
+    "liveness_probes",
   ]
 }

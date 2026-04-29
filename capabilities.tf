@@ -73,5 +73,50 @@ locals {
         mappings = jsonencode({})
       }
     ]
+
+    // Cloud Run v2 supports at most one startup_probe per container.
+    // Probe action types: http_get, tcp_socket, grpc. (exec is not supported.)
+    startup_probes = [
+      {
+        cap_tf_id             = "x"
+        initial_delay_seconds = null
+        period_seconds        = null
+        timeout_seconds       = null
+        failure_threshold     = null
+
+        grpc = jsonencode({
+          port    = 9000
+          service = "myservice"
+        })
+        http_get = jsonencode({
+          path = "/"
+          port = 8080
+        })
+        tcp_socket = jsonencode({
+          port = 8080
+        })
+      }
+    ]
+
+    // Cloud Run v2 supports at most one liveness_probe per container.
+    // Probe action types: http_get, grpc. (tcp_socket and exec are not supported.)
+    liveness_probes = [
+      {
+        cap_tf_id             = "x"
+        initial_delay_seconds = null
+        period_seconds        = null
+        timeout_seconds       = null
+        failure_threshold     = null
+
+        grpc = jsonencode({
+          port    = 9000
+          service = "myservice"
+        })
+        http_get = jsonencode({
+          path = "/"
+          port = 8080
+        })
+      }
+    ]
   }
 }

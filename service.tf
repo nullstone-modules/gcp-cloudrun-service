@@ -10,7 +10,7 @@ resource "google_cloud_run_v2_service" "this" {
   name                = local.service_name
   location            = local.region
   labels              = local.labels
-  ingress             = var.ingress
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
   deletion_protection = false
 
   template {
@@ -27,7 +27,7 @@ resource "google_cloud_run_v2_service" "this" {
 
     vpc_access {
       connector = local.vpc_access_connector_id
-      egress    = var.vpc_egress
+      egress    = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -41,6 +41,8 @@ resource "google_cloud_run_v2_service" "this" {
       }
 
       resources {
+        cpu_idle          = var.cpu_idle
+        startup_cpu_boost = true
         limits = {
           cpu    = var.cpu
           memory = var.memory
@@ -72,6 +74,91 @@ resource "google_cloud_run_v2_service" "this" {
           }
         }
       }
+
+      # Startup probe (Cloud Run supports at most one)
+      dynamic "startup_probe" {
+        for_each = local.startup_probes
+        iterator = sp
+
+        content {
+          initial_delay_seconds = sp.value.initial_delay_seconds
+          period_seconds        = sp.value.period_seconds
+          timeout_seconds       = sp.value.timeout_seconds
+          failure_threshold     = sp.value.failure_threshold
+
+          dynamic "http_get" {
+            for_each = sp.value.http_get
+            content {
+              path = lookup(http_get.value, "path", null)
+              port = lookup(http_get.value, "port", null)
+
+              dynamic "http_headers" {
+                for_each = compact(lookup(http_get.value, "http_headers", []))
+                iterator = header
+
+                content {
+                  name  = header.value.name
+                  value = header.value.value
+                }
+              }
+            }
+          }
+
+          dynamic "tcp_socket" {
+            for_each = sp.value.tcp_socket
+            content {
+              port = tcp_socket.value.port
+            }
+          }
+
+          dynamic "grpc" {
+            for_each = sp.value.grpc
+            content {
+              port    = grpc.value.port
+              service = lookup(grpc.value, "service", null)
+            }
+          }
+        }
+      }
+
+      # Liveness probe (Cloud Run supports at most one)
+      dynamic "liveness_probe" {
+        for_each = local.liveness_probes
+        iterator = lp
+
+        content {
+          initial_delay_seconds = lp.value.initial_delay_seconds
+          period_seconds        = lp.value.period_seconds
+          timeout_seconds       = lp.value.timeout_seconds
+          failure_threshold     = lp.value.failure_threshold
+
+          dynamic "http_get" {
+            for_each = lp.value.http_get
+            content {
+              path = lookup(http_get.value, "path", null)
+              port = lookup(http_get.value, "port", null)
+
+              dynamic "http_headers" {
+                for_each = compact(lookup(http_get.value, "http_headers", []))
+                iterator = header
+
+                content {
+                  name  = header.value.name
+                  value = header.value.value
+                }
+              }
+            }
+          }
+
+          dynamic "grpc" {
+            for_each = lp.value.grpc
+            content {
+              port    = grpc.value.port
+              service = lookup(grpc.value, "service", null)
+            }
+          }
+        }
+      }
     }
   }
 
@@ -87,15 +174,15 @@ resource "google_cloud_run_v2_service" "this" {
 
   lifecycle {
     create_before_destroy = true
+
+    precondition {
+      condition     = length(local.startup_probes) <= 1
+      error_message = "Cloud Run v2 supports at most one startup_probe per container, but ${length(local.startup_probes)} were provided via capabilities. Remove the extra startup_probe capability."
+    }
+
+    precondition {
+      condition     = length(local.liveness_probes) <= 1
+      error_message = "Cloud Run v2 supports at most one liveness_probe per container, but ${length(local.liveness_probes)} were provided via capabilities. Remove the extra liveness_probe capability."
+    }
   }
-}
-
-resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
-  count = var.allow_unauthenticated ? 1 : 0
-
-  project  = google_cloud_run_v2_service.this.project
-  location = google_cloud_run_v2_service.this.location
-  name     = google_cloud_run_v2_service.this.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
 }
