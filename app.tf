@@ -17,4 +17,8 @@ locals {
     service_name          = local.service_name
     service_id            = "projects/${local.project_id}/locations/${local.region}/services/${local.service_name}"
   })
+
+  post_app_metadata = tomap({
+    service_url = google_cloud_run_v2_service.this.uri
+  })
 }

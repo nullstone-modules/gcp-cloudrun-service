@@ -10,7 +10,8 @@ module "{{ .TfModuleName }}" {
   version = "{{ .SourceVersion }}"
   {{- end }}
 
-  app_metadata = local.app_metadata
+  app_metadata      = local.app_metadata
+  post_app_metadata = local.post_app_metadata
   {{ range $key, $value := .Variables -}}{{- if $value.HasValue }}
   {{ $key }} = jsondecode({{ $value.Value | to_json_string }})
   {{- end -}}{{- end }}

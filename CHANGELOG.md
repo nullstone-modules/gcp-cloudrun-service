@@ -1,3 +1,6 @@
+# 0.1.2 (May 20, 2026)
+* Added `post_app_metadata` for capabilities to use metadata from the created service infra.
+
 # 0.1.1 (May 15, 2026)
 * Fixed secrets interpolation when secret value contains "$".
 
