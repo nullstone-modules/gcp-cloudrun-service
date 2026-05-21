@@ -10,8 +10,10 @@ module "{{ .TfModuleName }}" {
   version = "{{ .SourceVersion }}"
   {{- end }}
 
-  app_metadata      = local.app_metadata
-  post_app_metadata = local.post_app_metadata
+  app_metadata = local.app_metadata
+{{- if .Meta.NeedsAppInfra }}
+  app_infra    = local.app_infra
+{{- end }}
   {{ range $key, $value := .Variables -}}{{- if $value.HasValue }}
   {{ $key }} = jsondecode({{ $value.Value | to_json_string }})
   {{- end -}}{{- end }}
@@ -23,27 +25,44 @@ module "{{ .TfModuleName }}" {
 {{ end }}
 
 locals {
-  cap_modules = [
-{{- range $index, $element := .ExceptNeedsDestroyed }}
-    {{ if $index }}, {{ end }}{
-      name       = "{{ $element.Name }}"
-      tfId       = "{{ $element.TfId }}"
-      namespace  = "{{ $element.Namespace }}"
-      env_prefix = "{{ $element.EnvPrefix }}"
-      outputs    = {{ $element.TfModuleAddr }}
+  // cap_env_prefixes maps each capability tfId to its env var prefix.
+  // Built from static metadata (no module references) so that the env-var aggregation
+  // in env_vars.tf does not transitively depend on every capability module.
+  cap_env_prefixes = {
+{{- range $element := .ExceptNeedsDestroyed }}
+    "{{ $element.TfId }}" = "{{ $element.EnvPrefix }}"
+{{- end }}
+  }
 
-      meta = jsondecode({{ $element.Meta | to_json_string }})
-    }
+  // cap_output_sources lists each (output, capability) pair that feeds this app, and is
+  // the input to local.capabilities below.
+  //
+  // Each entry references a SPECIFIC module output (module.<cap>.<output>) rather than the
+  // whole module object. This is what keeps app_infra capabilities (e.g. triggers) from
+  // creating a dependency cycle: referencing the whole module object depends on the module
+  // "close" node, which sits downstream of var.app_infra (-> local.app_infra -> service),
+  // so service -> capabilities -> module -> app_infra -> service. Referencing a single
+  // output depends only on that output's own expression, so an app_infra capability can
+  // both receive app_infra AND contribute its app-independent outputs (e.g. job_iam_members)
+  // without a cycle. (Contract: any output a capability exposes for the app to consume must
+  // not itself depend on app_infra.)
+  //
+  // NOTE: this requires Meta.OutputNames to list the outputs the module ACTUALLY emits.
+  // A direct reference to a declared-but-absent output (e.g. an output_names contract that
+  // lists "secrets" for a module that only emits "env") fails with "Unsupported attribute".
+  cap_output_sources = [
+{{- range $element := .ExceptNeedsDestroyed }}
+{{- range $output := $element.Meta.OutputNames }}
+    { output = "{{ $output }}", cap_tf_id = "{{ $element.TfId }}", items = {{ $element.TfModuleAddr }}.{{ $output }} },
+{{- end }}
 {{- end }}
   ]
 
-  cap_env_prefixes = {
-    for mod in local.cap_modules : mod.tfId => mod.env_prefix
-  }
-
   capabilities = {
     for outputName in local.capability_output_names : outputName => flatten([
-      for mod in local.cap_modules : [ for x in lookup(mod.outputs, outputName, []) : merge({ cap_tf_id = mod.tfId }, x) ] if contains(try(mod.meta.outputNames, []), outputName)
+      for src in local.cap_output_sources : [
+        for x in src.items : merge({ cap_tf_id = src.cap_tf_id }, x)
+      ] if src.output == outputName
     ])
   }
 }
