@@ -4,6 +4,7 @@ locals {
   effective_image_uri = local.app_version == "" ? local.bootstrap_image_uri : "${module.scaffold.repository_url}:${local.app_version}"
   main_container_name = "main"
   command             = length(var.command) > 0 ? var.command : null
+  service_audience    = "https://${local.app_name}"
 }
 
 resource "google_cloud_run_v2_service" "this" {
@@ -11,6 +12,7 @@ resource "google_cloud_run_v2_service" "this" {
   location            = local.region
   labels              = local.labels
   ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  custom_audiences    = [local.service_audience]
   deletion_protection = false
 
   template {
