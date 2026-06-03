@@ -1,3 +1,6 @@
+# 0.1.4 (Jun 03, 2026)
+* Added `GOOGLE_SERVICE_URL` to environment variables.
+
 # 0.1.3 (May 20, 2026)
 * Redesign capabilities scaffold to prevent circular dependencies.
 

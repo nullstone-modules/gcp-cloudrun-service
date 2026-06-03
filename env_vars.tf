@@ -52,6 +52,7 @@ locals {
     GOOGLE_CLOUD_PROJECT         = local.project_id
     GOOGLE_CLOUD_PROJECT_NUMBER  = local.project_number
     GOOGLE_SERVICE_ACCOUNT_EMAIL = module.scaffold.app_service_account.email
+    GOOGLE_SERVICE_URL           = google_cloud_run_v2_service.this.uri
   })
 
   input_env_vars    = merge(local.standard_env_vars, local.google_env_vars, local.cap_env_vars, var.env_vars)
