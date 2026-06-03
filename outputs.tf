@@ -58,6 +58,11 @@ output "service_uri" {
   description = "string ||| The auto-assigned URL of the Cloud Run service (e.g. https://{service_name}-{hash}-{region}.run.app). Reachability depends on var.ingress."
 }
 
+output "service_audience" {
+  value       = local.service_audience
+  description = "string ||| The audience used for OIDC-based access to the service uri."
+}
+
 output "image_pusher" {
   value       = module.scaffold.image_pusher
   description = "object({ email: string, impersonate: bool }) ||| A GCP service account that is allowed to push images."

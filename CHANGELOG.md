@@ -1,3 +1,6 @@
+# 0.1.7 (Jun 03, 2026)
+* Added `service_audience` output.
+
 # 0.1.6 (Jun 03, 2026)
 * Added `GOOGLE_SERVICE_AUDIENCE` environment variable.
 * Added custom audience `https://<app-name>`.
