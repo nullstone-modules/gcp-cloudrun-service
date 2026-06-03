@@ -1,3 +1,6 @@
+# 0.1.5 (Jun 03, 2026)
+* Removed `GOOGLE_SERVICE_URL` to environment variables to avoid cycle.
+
 # 0.1.4 (Jun 03, 2026)
 * Added `GOOGLE_SERVICE_URL` to environment variables.
 
