@@ -1,3 +1,6 @@
+# 0.1.8 (Jun 08, 2026)
+* Added `GOOGLE_CLOUD_REGION` env var to app.
+
 # 0.1.7 (Jun 03, 2026)
 * Added `service_audience` output.
 
