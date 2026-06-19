@@ -1,7 +1,8 @@
 terraform {
   required_providers {
     ns = {
-      source = "nullstone-io/ns"
+      source  = "nullstone-io/ns"
+      version = "~> 0.11.0"
     }
   }
 }
@@ -24,7 +25,7 @@ resource "random_string" "resource_suffix" {
 }
 
 locals {
-  labels        = { for k, v in data.ns_workspace.this.tags : lower(k) => v }
+  labels        = data.ns_workspace.this.gcp_labels
   block_name    = data.ns_workspace.this.block_name
   block_ref     = data.ns_workspace.this.block_ref
   resource_name = "${local.block_ref}-${random_string.resource_suffix.result}"
