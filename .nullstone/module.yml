@@ -4,6 +4,7 @@ friendly_name: Cloud Run Service
 description: Creates a long-running service with scale-to-zero using Google Cloud Run
 category: app
 subcategory: container
+app_type: generic
 provider_types:
     - gcp
 platform: cloudrun
