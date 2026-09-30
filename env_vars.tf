@@ -85,7 +85,7 @@ data "ns_env_values" "this" {
 // Cloud Run reads every secret directly from GCP secrets manager
 data "ns_env_platform_data" "this" {
   values     = data.ns_env_values.this.platform_data
-  secret_ids = { for key, secret in google_secret_manager_secret.app_secret : key => secret.secret_id }
+  secret_ids = { for key, secret in google_secret_manager_secret.app_secret : key => secret.id }
 }
 
 locals {
