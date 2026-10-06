@@ -22,21 +22,27 @@ locals {
   cap_env_prefixes = tomap({
     x = ""
   })
+  // cap_prefixes is a map indexed by capability name which points to the env_prefix in local.cap_modules
+  cap_prefixes = tomap({
+    x = ""
+  })
 
   capabilities = {
     env = [
       {
-        cap_tf_id = "x"
-        name      = ""
-        value     = ""
+        cap_tf_id  = "x"
+        capability = "x"
+        name       = "EXAMPLE_ENV"
+        value      = ""
       }
     ]
 
     secrets = [
       {
-        cap_tf_id = "x"
-        name      = ""
-        value     = sensitive("")
+        cap_tf_id  = "x"
+        capability = "x"
+        name       = "EXAMPLE_SECRET"
+        value      = sensitive("")
       }
     ]
 
@@ -45,8 +51,9 @@ locals {
     // They will be flattened into list(string) when we output from this module
     private_urls = [
       {
-        cap_tf_id = "x"
-        url       = "http://example"
+        cap_tf_id  = "x"
+        capability = "x"
+        url        = "http://example"
       }
     ]
 
@@ -55,8 +62,9 @@ locals {
     // They will be flattened into list(string) when we output from this module
     public_urls = [
       {
-        cap_tf_id = "x"
-        url       = "https://example.com"
+        cap_tf_id  = "x"
+        capability = "x"
+        url        = "https://example.com"
       }
     ]
 
@@ -65,10 +73,11 @@ locals {
     // See https://docs.nullstone.io/extending/metrics/overview.html
     metrics = [
       {
-        cap_tf_id = "x"
-        name      = ""
-        type      = "usage|usage-percent|duration|generic"
-        unit      = ""
+        cap_tf_id  = "x"
+        capability = "x"
+        name       = ""
+        type       = "usage|usage-percent|duration|generic"
+        unit       = ""
 
         mappings = jsonencode({})
       }
@@ -79,6 +88,7 @@ locals {
     startup_probes = [
       {
         cap_tf_id             = "x"
+        capability            = "x"
         initial_delay_seconds = null
         period_seconds        = null
         timeout_seconds       = null
@@ -103,6 +113,7 @@ locals {
     liveness_probes = [
       {
         cap_tf_id             = "x"
+        capability            = "x"
         initial_delay_seconds = null
         period_seconds        = null
         timeout_seconds       = null

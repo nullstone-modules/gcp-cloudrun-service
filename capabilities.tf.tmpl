@@ -34,6 +34,13 @@ locals {
 {{- end }}
   }
 
+  // cap_prefixes is keyed by capability name for ns_env_layout / ns_env_values
+  cap_prefixes = {
+{{- range $element := .ExceptNeedsDestroyed }}
+    "{{ $element.Name }}" = "{{ $element.EnvPrefix }}"
+{{- end }}
+  }
+
   // cap_output_sources lists each (output, capability) pair that feeds this app, and is
   // the input to local.capabilities below.
   //
@@ -53,7 +60,7 @@ locals {
   cap_output_sources = [
 {{- range $element := .ExceptNeedsDestroyed }}
 {{- range $output := $element.Meta.OutputNames }}
-    { output = "{{ $output }}", cap_tf_id = "{{ $element.TfId }}", items = {{ $element.TfModuleAddr }}.{{ $output }} },
+    { output = "{{ $output }}", cap_tf_id = "{{ $element.TfId }}", capability = "{{ $element.Name }}", items = {{ $element.TfModuleAddr }}.{{ $output }} },
 {{- end }}
 {{- end }}
   ]
@@ -61,7 +68,7 @@ locals {
   capabilities = {
     for outputName in local.capability_output_names : outputName => flatten([
       for src in local.cap_output_sources : [
-        for x in src.items : merge({ cap_tf_id = src.cap_tf_id }, x)
+        for x in src.items : merge({ cap_tf_id = src.cap_tf_id, capability = src.capability }, x)
       ] if src.output == outputName
     ])
   }

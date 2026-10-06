@@ -6,6 +6,6 @@ module "scaffold" {
   app_name               = local.app_name
   block_ref              = local.block_ref
   resource_suffix        = random_string.resource_suffix.result
-  repo_labels            = local.repo_labels
+  repo_labels            = local.labels
   op_impersonater_emails = [local.ns_agent_service_account_email]
 }

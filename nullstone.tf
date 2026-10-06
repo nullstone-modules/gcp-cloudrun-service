@@ -2,7 +2,7 @@ terraform {
   required_providers {
     ns = {
       source  = "nullstone-io/ns"
-      version = "~> 0.11.0"
+      version = "~> 0.13.0"
     }
   }
 }
@@ -29,10 +29,4 @@ locals {
   block_name    = data.ns_workspace.this.block_name
   block_ref     = data.ns_workspace.this.block_ref
   resource_name = "${local.block_ref}-${random_string.resource_suffix.result}"
-
-  repo_labels = {
-    "nullstone-stack" = data.ns_workspace.this.stack_name
-    "nullstone-block" = data.ns_workspace.this.block_name
-    "nullstone-env"   = data.ns_workspace.this.env_name
-  }
 }
